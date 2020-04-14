@@ -79,6 +79,9 @@ contract KeepRandomBeaconOperator is ReentrancyGuard {
     // protocol to produce a relay entry.
     uint256 public groupThreshold = 33;
 
+    // Safety margin of potentially misbehaving participants during threshold signing.
+    uint256 public dkgSignatureSafetyMargin = 22;
+
     // Time in blocks after which the next group member is eligible
     // to submit the result.
     uint256 public resultPublicationBlockStep = 3;
@@ -198,10 +201,7 @@ contract KeepRandomBeaconOperator is ReentrancyGuard {
         dkgResultVerification.timeDKG = 5*(1+5) + 2*(1+10) + 20;
         dkgResultVerification.resultPublicationBlockStep = resultPublicationBlockStep;
         dkgResultVerification.groupSize = groupSize;
-        // TODO: For now, the required number of signatures is equal to group
-        // threshold. This should be updated to keep a safety margin for
-        // participants misbehaving during signing.
-        dkgResultVerification.signatureThreshold = groupThreshold;
+        dkgResultVerification.signatureThreshold = groupThreshold.add(dkgSignatureSafetyMargin);
     }
 
     /**
