@@ -76,12 +76,12 @@ library DKGResultVerification {
 
         // number of disqualified operators cannot exceed 25%
         require(
-            misbehaved.length <= self.groupSize.sub(self.signatureThreshold).div(2),
+            misbehaved.length <= (self.groupSize - self.signatureThreshold) / 2,
             "Malformed misbehaved bytes"
         );
 
         uint256 signaturesCount = signatures.length / 65;
-        if (misbehaved.length > signaturesCount.sub(self.signatureThreshold)) {
+        if (misbehaved.length > signaturesCount - self.signatureThreshold) {
             return false;
         }
 
