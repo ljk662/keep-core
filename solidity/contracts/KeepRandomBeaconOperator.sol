@@ -201,7 +201,7 @@ contract KeepRandomBeaconOperator is ReentrancyGuard {
         dkgResultVerification.timeDKG = 5*(1+5) + 2*(1+10) + 20;
         dkgResultVerification.resultPublicationBlockStep = resultPublicationBlockStep;
         dkgResultVerification.groupSize = groupSize;
-        dkgResultVerification.signatureThreshold = groupThreshold.add(dkgSignatureSafetyMargin);
+        dkgResultVerification.signatureThreshold = groupThreshold;
     }
 
     /**
@@ -335,7 +335,7 @@ contract KeepRandomBeaconOperator is ReentrancyGuard {
     ) public {
         address[] memory members = selectedParticipants();
 
-        dkgResultVerification.verify(
+        bool isDkgVerified = dkgResultVerification.verify(
             submitterMemberIndex,
             groupPubKey,
             misbehaved,
@@ -345,10 +345,12 @@ contract KeepRandomBeaconOperator is ReentrancyGuard {
             groupSelection.ticketSubmissionStartBlock + groupSelection.ticketSubmissionTimeout
         );
 
-        groups.setGroupMembers(groupPubKey, members, misbehaved);
-        groups.addGroup(groupPubKey);
+        if (isDkgVerified) {
+            groups.setGroupMembers(groupPubKey, members, misbehaved);
+            groups.addGroup(groupPubKey);
+            emit DkgResultSubmittedEvent(submitterMemberIndex, groupPubKey, misbehaved);
+        }
         reimburseDkgSubmitter();
-        emit DkgResultSubmittedEvent(submitterMemberIndex, groupPubKey, misbehaved);
         groupSelection.stop();
     }
 

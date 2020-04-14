@@ -47,7 +47,8 @@ library DKGResultVerification {
      * protocol ended.
      *
      * @return true if submitter is eligible to submit and the result is valid;
-     * Otherwise, transaction is reverted.
+     * Otherwise, transaction is either reverted or returns false when misbehaved
+     * members exceed a safety margin.
      */
     function verify(
         Storage storage self,
@@ -73,12 +74,17 @@ library DKGResultVerification {
 
         require(groupPubKey.length == 128, "Malformed group public key");
 
+        // number of disqualified operators cannot exceed 25%
         require(
-            misbehaved.length <= self.groupSize - self.signatureThreshold,
+            misbehaved.length <= self.groupSize.sub(self.signatureThreshold).div(2),
             "Malformed misbehaved bytes"
         );
 
         uint256 signaturesCount = signatures.length / 65;
+        if (misbehaved.length > signaturesCount.sub(self.signatureThreshold)) {
+            return false;
+        }
+
         require(signatures.length >= 65, "Too short signatures array");
         require(signatures.length % 65 == 0, "Malformed signatures array");
         require(signaturesCount == signingMemberIndices.length, "Unexpected signatures count");
